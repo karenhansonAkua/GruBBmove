@@ -1,5 +1,5 @@
-// design tokens and shared constants
-export const T = {
+// Dark mode (default)
+const darkTheme = {
   bg: "#0A0A0F", surface: "#13131A", card: "#1C1C28", border: "#2A2A3A",
   accent: "#FF6B2B", accentL: "#FF8C55", accentDim: "#FF6B2B18",
   green: "#22C55E", greenDim: "#22C55E18", blue: "#3B82F6", blueDim: "#3B82F618",
@@ -7,6 +7,19 @@ export const T = {
   yellow: "#F59E0B", yellowDim: "#F59E0B18",
   text: "#F0F0F5", muted: "#8888AA", dim: "#44445A",
 };
+
+// Light mode
+const lightTheme = {
+  bg: "#FFFFFF", surface: "#F5F5F7", card: "#FFFFFF", border: "#D8D8DD",
+  accent: "#FF6B2B", accentL: "#FF8C55", accentDim: "#FF6B2B12",
+  green: "#16A34A", greenDim: "#16A34A12", blue: "#2563EB", blueDim: "#2563EB12",
+  purple: "#9333EA", purpleDim: "#9333EA12", pink: "#DB2777", pinkDim: "#DB277712",
+  yellow: "#D97706", yellowDim: "#D9770612",
+  text: "#1F2937", muted: "#6B7280", dim: "#9CA3AF",
+};
+
+export const getTheme = (isDark) => isDark ? darkTheme : lightTheme;
+export const T = darkTheme;
 
 export const HOSTELS = [
   "Mensah Sarbah Hall","Legon Hall","Commonwealth Hall","Volta Hall",

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { T, HOSTELS, SERVICES } from "./theme.js";
+import { T, getTheme, HOSTELS, SERVICES } from "./theme.js";
 
 // ─── GLOBAL CSS ───────────────────────────────────────────────────────────────
 const CSS = `
@@ -331,20 +331,20 @@ function OrderSuccess({ order, onBack }) {
 }
 
 // ─── SHARED FORM PIECES ───────────────────────────────────────────────────────
-function FLabel({children}) { return <div style={{fontSize:13,color:T.muted,marginBottom:6,fontWeight:500}}>{children}</div>; }
-function FInput({label,value,onChange,placeholder,type="text",required}) {
-  return <div><FLabel>{label}{required&&<span style={{color:T.accent}}> *</span>}</FLabel><input className="inp" type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}/></div>;
+function FLabel({children, theme = T}) { return <div style={{fontSize:13,color:theme.muted,marginBottom:6,fontWeight:500}}>{children}</div>; }
+function FInput({label,value,onChange,placeholder,type="text",required,theme=T}) {
+  return <div><FLabel theme={theme}>{label}{required&&<span style={{color:theme.accent}}> *</span>}</FLabel><input className="inp" type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{background:theme.card,borderColor:theme.border,color:theme.text}}/></div>;
 }
-function FSelect({label,value,onChange,options,required}) {
+function FSelect({label,value,onChange,options,required,theme=T}) {
   return (
     <div style={{position:"relative"}}>
-      <FLabel>{label}{required&&<span style={{color:T.accent}}> *</span>}</FLabel>
+      <FLabel theme={theme}>{label}{required&&<span style={{color:theme.accent}}> *</span>}</FLabel>
       <div style={{position:"relative"}}>
-        <select className="inp" value={value} onChange={e=>onChange(e.target.value)}>
+        <select className="inp" value={value} onChange={e=>onChange(e.target.value)} style={{background:theme.card,borderColor:theme.border,color:theme.text}}>
           <option value="">Select...</option>
           {options.map(o=><option key={o} value={o}>{o}</option>)}
         </select>
-        <div style={{position:"absolute",right:13,top:"50%",transform:"translateY(-50%)",pointerEvents:"none",color:T.muted}}>▾</div>
+        <div style={{position:"absolute",right:13,top:"50%",transform:"translateY(-50%)",pointerEvents:"none",color:theme.muted}}>▾</div>
       </div>
     </div>
   );
@@ -849,62 +849,8 @@ function DeliveryPage({ user, onOrder, showToast }) {
   );
 }
 
-// ─── TRACKING PAGE ────────────────────────────────────────────────────────────
-function TrackingPage({ order, onBack }) {
-  const [progress, setProgress] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setProgress(p => p >= 3 ? 3 : p + 1), 4000);
-    return () => clearInterval(id);
-  }, []);
-  const steps = [
-    { label:"Order Received",    sub:"We've got your order",         icon:"✅", done: progress>=0 },
-    { label:"Being Prepared",    sub:"Getting your order ready",     icon:"🔄", done: progress>=1 },
-    { label:"Rider on the way",  sub:"Our rider has been assigned",  icon:"🚴", done: progress>=2 },
-    { label:"Delivered",         sub:"Order delivered to your door", icon:"🎉", done: progress>=3 },
-  ];
+// REMOVED - See TrackingPage with theme support below
 
-  return (
-    <div style={{padding:"24px 20px"}}>
-      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}>
-        <button onClick={onBack} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:12,width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:T.text,fontSize:18}}>←</button>
-        <div>
-          <div className="syne" style={{fontSize:18,fontWeight:700}}>Track Order</div>
-          <div style={{fontSize:13,color:T.muted}}>#{order?.id}</div>
-        </div>
-      </div>
-
-      {/* MAP PLACEHOLDER */}
-      <div style={{background:`linear-gradient(135deg,${T.surface},${T.card})`,border:`1px solid ${T.border}`,borderRadius:20,height:200,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",marginBottom:20,position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",top:20,left:20,background:T.accent,borderRadius:8,padding:"4px 12px",fontSize:12,fontWeight:700,color:"#fff"}}>LIVE</div>
-        <div style={{fontSize:40,marginBottom:8}}>🗺️</div>
-        <div style={{fontSize:14,fontWeight:600}}>Live Map Tracking</div>
-        <div style={{fontSize:12,color:T.muted,marginTop:4}}>Real-time tracking in Phase 2</div>
-        <div style={{fontSize:12,color:T.dim,marginTop:2}}>(Leaflet maps integration ready)</div>
-      </div>
-
-      {/* PROGRESS STEPS */}
-      <div className="card" style={{padding:20,marginBottom:16}}>
-        <div className="syne" style={{fontSize:14,fontWeight:700,marginBottom:18}}>Delivery Progress</div>
-        {steps.map((step,i)=>(
-          <div key={i}>
-            <div className="timeline-step">
-              <div>
-                <div style={{width:32,height:32,borderRadius:"50%",background:step.done?T.accentDim:T.surface,border:`2px solid ${step.done?T.accent:T.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,transition:"all .5s"}}>{step.done?step.icon:"○"}</div>
-              </div>
-              <div style={{paddingTop:4}}>
-                <div style={{fontWeight:600,fontSize:14,color:step.done?T.text:T.muted}}>{step.label}</div>
-                <div style={{fontSize:12,color:T.muted,marginTop:2}}>{step.sub}</div>
-              </div>
-            </div>
-            {i<steps.length-1 && <div style={{width:2,height:24,background:steps[i+1].done?T.accent:T.border,marginLeft:15,marginBottom:4,marginTop:4,transition:"background .5s"}}/>}
-          </div>
-        ))}
-      </div>
-
-      {order?.scheduledDate && <CountdownDisplay targetDate={order.scheduledDate+"T"+(order.scheduledTime||"08:00")} label="Scheduled in" />}
-    </div>
-  );
-}
 
 // ─── ORDERS TAB ───────────────────────────────────────────────────────────────
 function OrdersTab({ orders, onTrack }) {
@@ -1031,7 +977,7 @@ function HomeTab({ user, onNavigate }) {
 }
 
 // ─── DASHBOARD SHELL ──────────────────────────────────────────────────────────
-function Dashboard({ user, orders, onPlaceOrder, onSignOut, showToast }) {
+function Dashboard({ user, orders, onPlaceOrder, onSignOut, showToast, theme = T, onThemeChange }) {
   const [activeNav, setActiveNav] = useState("home");
   const [serviceId, setServiceId] = useState(null);
   const [successOrder, setSuccessOrder] = useState(null);
@@ -1103,24 +1049,24 @@ function Dashboard({ user, orders, onPlaceOrder, onSignOut, showToast }) {
 }
 
 // ─── AUTH SCREENS ─────────────────────────────────────────────────────────────
-function AuthWrap({ title, subtitle, children, onBack }) {
+function AuthWrap({ title, subtitle, children, onBack, theme = T }) {
   return (
-    <div style={{minHeight:"100vh",background:T.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 16px",position:"relative"}}>
-      <div style={{position:"absolute",top:-80,right:-80,width:350,height:350,background:`radial-gradient(circle,${T.accent}18 0%,transparent 70%)`,pointerEvents:"none"}}/>
+    <div style={{minHeight:"100vh",background:theme.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 16px",position:"relative"}}>
+      <div style={{position:"absolute",top:-80,right:-80,width:350,height:350,background:`radial-gradient(circle,${theme.accent}18 0%,transparent 70%)`,pointerEvents:"none"}}/>
       <div style={{width:"100%",maxWidth:420}}>
-        <div className="syne" style={{fontSize:24,fontWeight:800,color:T.text,marginBottom:28,textAlign:"center"}}>Grubb<span style={{color:T.accent}}>Move</span></div>
-        <div className="card" style={{padding:"28px 24px"}}>
-          <h2 className="syne" style={{fontSize:22,fontWeight:700,marginBottom:5}}>{title}</h2>
-          <p style={{color:T.muted,fontSize:14,marginBottom:24}}>{subtitle}</p>
+        <div className="syne" style={{fontSize:24,fontWeight:800,color:theme.text,marginBottom:28,textAlign:"center"}}>Grubb<span style={{color:theme.accent}}>Move</span></div>
+        <div className="card" style={{padding:"28px 24px",background:theme.card,border:`1px solid ${theme.border}`}}>
+          <h2 className="syne" style={{fontSize:22,fontWeight:700,marginBottom:5,color:theme.text}}>{title}</h2>
+          <p style={{color:theme.muted,fontSize:14,marginBottom:24}}>{subtitle}</p>
           {children}
         </div>
-        {onBack&&<div style={{textAlign:"center",marginTop:18}}><span style={{fontSize:13,color:T.dim,cursor:"pointer"}} onClick={onBack}>← Back</span></div>}
+        {onBack&&<div style={{textAlign:"center",marginTop:18}}><span style={{fontSize:13,color:theme.dim,cursor:"pointer"}} onClick={onBack}>← Back</span></div>}
       </div>
     </div>
   );
 }
 
-function SignInScreen({ onSignIn, onGoSignUp, onBack, showToast }) {
+function SignInScreen({ onSignIn, onGoSignUp, onBack, showToast, theme = T }) {
   const [f, setF] = useState({ email:"", password:"" });
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -1130,25 +1076,25 @@ function SignInScreen({ onSignIn, onGoSignUp, onBack, showToast }) {
     setTimeout(() => { onSignIn({ name:"Student", email:f.email, hostel:"Legon Hall", room:"A12", phone:"", year:"Level 300", program:"" }); setLoading(false); }, 1000);
   };
   return (
-    <AuthWrap title="Welcome back" subtitle="Sign in to your GruBBmove account" onBack={onBack}>
+    <AuthWrap title="Welcome back" subtitle="Sign in to your GruBBmove account" onBack={onBack} theme={theme}>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
-        <FInput label="Email address" type="email" placeholder="you@university.edu.gh" value={f.email} onChange={v=>setF({...f,email:v})}/>
+        <FInput label="Email address" type="email" placeholder="you@university.edu.gh" value={f.email} onChange={v=>setF({...f,email:v})} theme={theme}/>
         <div>
-          <FLabel>Password</FLabel>
+          <FLabel theme={theme}>Password</FLabel>
           <div style={{position:"relative"}}>
-            <input className="inp" type={showPw?"text":"password"} placeholder="Enter password" value={f.password} onChange={e=>setF({...f,password:e.target.value})} style={{paddingRight:46}}/>
-            <button onClick={()=>setShowPw(!showPw)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:T.muted,fontSize:18}}>{showPw?"🙈":"👁️"}</button>
+            <input className="inp" type={showPw?"text":"password"} placeholder="Enter password" value={f.password} onChange={e=>setF({...f,password:e.target.value})} style={{paddingRight:46,background:theme.card,borderColor:theme.border,color:theme.text}}/>
+            <button onClick={()=>setShowPw(!showPw)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:theme.muted,fontSize:18}}>{showPw?"🙈":"👁️"}</button>
           </div>
         </div>
-        <div style={{textAlign:"right"}}><span style={{fontSize:13,color:T.accent,cursor:"pointer"}}>Forgot password?</span></div>
+        <div style={{textAlign:"right"}}><span style={{fontSize:13,color:theme.accent,cursor:"pointer"}}>Forgot password?</span></div>
         <button className="btn btn-p btn-lg btn-full" onClick={go}>{loading?"Signing in...":"Sign In"}</button>
-        <div style={{textAlign:"center",fontSize:14,color:T.muted}}>No account? <span style={{color:T.accent,cursor:"pointer",fontWeight:600}} onClick={onGoSignUp}>Sign up free</span></div>
+        <div style={{textAlign:"center",fontSize:14,color:theme.muted}}>No account? <span style={{color:theme.accent,cursor:"pointer",fontWeight:600}} onClick={onGoSignUp}>Sign up free</span></div>
       </div>
     </AuthWrap>
   );
 }
 
-function SignUpScreen({ onSignUp, onGoSignIn, onBack, showToast }) {
+function SignUpScreen({ onSignUp, onGoSignIn, onBack, showToast, theme = T }) {
   const [f, setF] = useState({ name:"", email:"", phone:"", password:"", confirm:"" });
   const [agree, setAgree] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -1161,27 +1107,27 @@ function SignUpScreen({ onSignUp, onGoSignIn, onBack, showToast }) {
     setTimeout(() => { onSignUp({ name:f.name, email:f.email, phone:f.phone, hostel:"", room:"" }); setLoading(false); }, 1000);
   };
   return (
-    <AuthWrap title="Create account" subtitle="Join thousands of students on GruBBmove" onBack={onBack}>
+    <AuthWrap title="Create account" subtitle="Join thousands of students on GruBBmove" onBack={onBack} theme={theme}>
       <div style={{display:"flex",flexDirection:"column",gap:13}}>
-        <FInput label="Full name" placeholder="e.g. Kwame Mensah" required value={f.name} onChange={v=>setF({...f,name:v})}/>
-        <FInput label="Email address" type="email" required placeholder="you@university.edu.gh" value={f.email} onChange={v=>setF({...f,email:v})}/>
-        <FInput label="Phone number" type="tel" required placeholder="024 XXX XXXX" value={f.phone} onChange={v=>setF({...f,phone:v})}/>
-        <FInput label="Password" type="password" required placeholder="Min. 6 characters" value={f.password} onChange={v=>setF({...f,password:v})}/>
-        <FInput label="Confirm password" type="password" required placeholder="Re-enter password" value={f.confirm} onChange={v=>setF({...f,confirm:v})}/>
+        <FInput label="Full name" placeholder="e.g. Kwame Mensah" required value={f.name} onChange={v=>setF({...f,name:v})} theme={theme}/>
+        <FInput label="Email address" type="email" required placeholder="you@university.edu.gh" value={f.email} onChange={v=>setF({...f,email:v})} theme={theme}/>
+        <FInput label="Phone number" type="tel" required placeholder="024 XXX XXXX" value={f.phone} onChange={v=>setF({...f,phone:v})} theme={theme}/>
+        <FInput label="Password" type="password" required placeholder="Min. 6 characters" value={f.password} onChange={v=>setF({...f,password:v})} theme={theme}/>
+        <FInput label="Confirm password" type="password" required placeholder="Re-enter password" value={f.confirm} onChange={v=>setF({...f,confirm:v})} theme={theme}/>
         <div style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",marginTop:4}} onClick={()=>setAgree(!agree)}>
-          <div style={{width:22,height:22,borderRadius:7,border:`2px solid ${agree?T.accent:T.border}`,background:agree?T.accent:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all .2s"}}>
+          <div style={{width:22,height:22,borderRadius:7,border:`2px solid ${agree?theme.accent:theme.border}`,background:agree?theme.accent:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all .2s"}}>
             {agree&&<span style={{color:"#fff",fontSize:13}}>✓</span>}
           </div>
-          <span style={{fontSize:13,color:T.muted}}>I agree to GruBBmove's <span style={{color:T.accent}}>Terms & Privacy Policy</span></span>
+          <span style={{fontSize:13,color:theme.muted}}>I agree to GruBBmove's <span style={{color:theme.accent}}>Terms & Privacy Policy</span></span>
         </div>
         <button className="btn btn-p btn-lg btn-full" onClick={go}>{loading?"Creating account...":"Create Account"}</button>
-        <div style={{textAlign:"center",fontSize:14,color:T.muted}}>Have an account? <span style={{color:T.accent,cursor:"pointer",fontWeight:600}} onClick={onGoSignIn}>Sign in</span></div>
+        <div style={{textAlign:"center",fontSize:14,color:theme.muted}}>Have an account? <span style={{color:theme.accent,cursor:"pointer",fontWeight:600}} onClick={onGoSignIn}>Sign in</span></div>
       </div>
     </AuthWrap>
   );
 }
 
-function ProfileSetupScreen({ user, onComplete, showToast }) {
+function ProfileSetupScreen({ user, onComplete, showToast, theme = T }) {
   const [step, setStep] = useState(1);
   const [f, setF] = useState({ hostel:"", room:"", year:"", program:"" });
   const next = () => {
@@ -1190,62 +1136,63 @@ function ProfileSetupScreen({ user, onComplete, showToast }) {
     setStep(2);
   };
   return (
-    <AuthWrap title={step===1?"Where do you stay?":"About you"} subtitle={step===1?"We need this to deliver right to your door":"Just a couple more details"}>
+    <AuthWrap title={step===1?"Where do you stay?":"About you"} subtitle={step===1?"We need this to deliver right to your door":"Just a couple more details"} theme={theme}>
       <div style={{marginBottom:20}}>
         <div style={{display:"flex",gap:6,marginBottom:8}}>
-          {[1,2].map(n=><div key={n} style={{flex:1,height:4,borderRadius:4,background:n<=step?T.accent:T.border,transition:"background .3s"}}/>)}
+          {[1,2].map(n=><div key={n} style={{flex:1,height:4,borderRadius:4,background:n<=step?theme.accent:theme.border,transition:"background .3s"}}/>)}
         </div>
-        <div style={{fontSize:12,color:T.muted}}>Step {step} of 2</div>
+        <div style={{fontSize:12,color:theme.muted}}>Step {step} of 2</div>
       </div>
       {step===1&&(
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
-          <FSelect label="Your hostel" required value={f.hostel} onChange={v=>setF({...f,hostel:v})} options={HOSTELS}/>
-          <FInput label="Room number" required placeholder="e.g. B-204, Block C Room 12" value={f.room} onChange={v=>setF({...f,room:v})}/>
+          <FSelect label="Your hostel" required value={f.hostel} onChange={v=>setF({...f,hostel:v})} options={HOSTELS} theme={theme}/>
+          <FInput label="Room number" required placeholder="e.g. B-204, Block C Room 12" value={f.room} onChange={v=>setF({...f,room:v})} theme={theme}/>
         </div>
       )}
       {step===2&&(
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
-          <FSelect label="Year of study" value={f.year} onChange={v=>setF({...f,year:v})} options={["Level 100","Level 200","Level 300","Level 400","Postgraduate"]}/>
-          <FInput label="Programme / Faculty (optional)" placeholder="e.g. Computer Science" value={f.program} onChange={v=>setF({...f,program:v})}/>
+          <FSelect label="Year of study" value={f.year} onChange={v=>setF({...f,year:v})} options={["Level 100","Level 200","Level 300","Level 400","Postgraduate"]} theme={theme}/>
+          <FInput label="Programme / Faculty (optional)" placeholder="e.g. Computer Science" value={f.program} onChange={v=>setF({...f,program:v})} theme={theme}/>
         </div>
       )}
       <button className="btn btn-p btn-lg btn-full" style={{marginTop:20}} onClick={next}>{step===2?"Complete Setup 🚀":"Continue →"}</button>
-      {step===2&&<button className="btn btn-g btn-md btn-full" style={{marginTop:10}} onClick={()=>onComplete({...user,...f})}>Skip for now</button>}
+      {step===2&&<button className="btn btn-g btn-md btn-full" style={{marginTop:10,borderColor:theme.border,color:theme.text}} onClick={()=>onComplete({...user,...f})}>Skip for now</button>}
     </AuthWrap>
   );
 }
 
 // ─── LANDING PAGE ─────────────────────────────────────────────────────────────
-function LandingPage({ onSignIn, onSignUp }) {
+function LandingPage({ onSignIn, onSignUp, theme = T, onThemeChange }) {
   return (
-    <div style={{minHeight:"100vh",background:T.bg,overflow:"hidden",position:"relative"}}>
-      <div style={{position:"absolute",top:-100,right:-100,width:450,height:450,background:`radial-gradient(circle,${T.accent}18 0%,transparent 70%)`,pointerEvents:"none"}}/>
-      <div style={{position:"absolute",bottom:-80,left:-80,width:350,height:350,background:`radial-gradient(circle,${T.blue}12 0%,transparent 70%)`,pointerEvents:"none"}}/>
+    <div style={{minHeight:"100vh",background:theme.bg,overflow:"hidden",position:"relative"}}>
+      <div style={{position:"absolute",top:-100,right:-100,width:450,height:450,background:`radial-gradient(circle,${theme.accent}18 0%,transparent 70%)`,pointerEvents:"none"}}/>
+      <div style={{position:"absolute",bottom:-80,left:-80,width:350,height:350,background:`radial-gradient(circle,${theme.blue}12 0%,transparent 70%)`,pointerEvents:"none"}}/>
 
       {/* NAVBAR */}
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"22px 24px",position:"relative",zIndex:10}}>
-        <div className="syne" style={{fontSize:22,fontWeight:800}}>Grubb<span style={{color:T.accent}}>Move</span></div>
-        <div style={{display:"flex",gap:10}}>
-          <button className="btn btn-g btn-sm" onClick={onSignIn} style={{width:"auto"}}>Sign In</button>
+        <div className="syne" style={{fontSize:22,fontWeight:800,color:theme.text}}>Grubb<span style={{color:theme.accent}}>Move</span></div>
+        <div style={{display:"flex",gap:10,alignItems:"center"}}>
+          <button onClick={()=>onThemeChange(!theme.bg.includes("0A0A"))} style={{background:theme.card,border:`1px solid ${theme.border}`,borderRadius:12,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:16}}>{theme.bg.includes("0A0A")?"☀️":"🌙"}</button>
+          <button className="btn btn-g btn-sm" onClick={onSignIn} style={{width:"auto",borderColor:theme.border,color:theme.text}}>Sign In</button>
           <button className="btn btn-p btn-sm" onClick={onSignUp} style={{width:"auto"}}>Get Started</button>
         </div>
       </div>
 
       {/* HERO */}
       <div style={{textAlign:"center",padding:"40px 24px 32px",position:"relative",zIndex:10}}>
-        <div className="badge" style={{background:`${T.green}22`,color:T.green,marginBottom:18,display:"inline-flex"}}>
-          <span style={{width:8,height:8,borderRadius:"50%",background:T.green,animation:"pulse 1.5s infinite"}}/>
+        <div className="badge" style={{background:`${theme.green}22`,color:theme.green,marginBottom:18,display:"inline-flex"}}>
+          <span style={{width:8,height:8,borderRadius:"50%",background:theme.green,animation:"pulse 1.5s infinite"}}/>
           Live across campus
         </div>
-        <h1 className="syne" style={{fontSize:"clamp(30px,7vw,56px)",fontWeight:800,lineHeight:1.1,marginBottom:20}}>
-          Everything delivered.<br/><span style={{color:T.accent}}>Right to your door.</span>
+        <h1 className="syne" style={{fontSize:"clamp(30px,7vw,56px)",fontWeight:800,lineHeight:1.1,marginBottom:20,color:theme.text}}>
+          Everything delivered.<br/><span style={{color:theme.accent}}>Right to your door.</span>
         </h1>
-        <p style={{fontSize:16,color:T.muted,maxWidth:420,margin:"0 auto 32px",lineHeight:1.7}}>
+        <p style={{fontSize:16,color:theme.muted,maxWidth:420,margin:"0 auto 32px",lineHeight:1.7}}>
           Gas refills, laundry, groceries, pharmacy & more. GruBBmove is the campus logistics platform built for students.
         </p>
         <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
           <button className="btn btn-p btn-lg" onClick={onSignUp} style={{width:"auto"}}>Start Using GruBBmove</button>
-          <button className="btn btn-g btn-lg" onClick={onSignIn} style={{width:"auto"}}>Sign In</button>
+          <button className="btn btn-g btn-lg" onClick={onSignIn} style={{width:"auto",borderColor:theme.border,color:theme.text}}>Sign In</button>
         </div>
       </div>
 
@@ -1253,30 +1200,30 @@ function LandingPage({ onSignIn, onSignUp }) {
       <div style={{padding:"0 20px 32px",maxWidth:480,margin:"0 auto"}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
           {SERVICES.map((s,i)=>(
-            <div key={s.id} className="card" style={{padding:14,textAlign:"center",animation:`fadeUp .5s ease ${i*.08}s both`}}>
+            <div key={s.id} className="card" style={{padding:14,textAlign:"center",animation:`fadeUp .5s ease ${i*.08}s both`,background:theme.card,border:`1px solid ${theme.border}`}}>
               <div style={{fontSize:26,marginBottom:6}}>{s.emoji}</div>
-              <div style={{fontSize:11,fontWeight:700,color:T.text}}>{s.label}</div>
-              <div style={{fontSize:10,color:T.muted,marginTop:3}}>{s.desc.split(" ").slice(0,3).join(" ")}...</div>
+              <div style={{fontSize:11,fontWeight:700,color:theme.text}}>{s.label}</div>
+              <div style={{fontSize:10,color:theme.muted,marginTop:3}}>{s.desc.split(" ").slice(0,3).join(" ")}...</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* STATS */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",borderTop:`1px solid ${T.border}`,borderBottom:`1px solid ${T.border}`,marginBottom:48}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",borderTop:`1px solid ${theme.border}`,borderBottom:`1px solid ${theme.border}`,marginBottom:48}}>
         {[["500+","Students"],["6","Services"],["< 45min","Avg Delivery"]].map(([v,l])=>(
-          <div key={l} style={{padding:"20px 12px",textAlign:"center",borderRight:`1px solid ${T.border}`}}>
-            <div className="syne" style={{fontSize:24,fontWeight:800,color:T.accent}}>{v}</div>
-            <div style={{fontSize:12,color:T.muted,marginTop:3}}>{l}</div>
+          <div key={l} style={{padding:"20px 12px",textAlign:"center",borderRight:`1px solid ${theme.border}`}}>
+            <div className="syne" style={{fontSize:24,fontWeight:800,color:theme.accent}}>{v}</div>
+            <div style={{fontSize:12,color:theme.muted,marginTop:3}}>{l}</div>
           </div>
         ))}
       </div>
 
       {/* CTA */}
       <div style={{padding:"0 20px 60px",textAlign:"center"}}>
-        <div className="card" style={{padding:"28px 24px",maxWidth:420,margin:"0 auto"}}>
-          <h2 className="syne" style={{fontSize:22,fontWeight:700,marginBottom:10}}>Ready to simplify campus life?</h2>
-          <p style={{color:T.muted,marginBottom:20,fontSize:14}}>Join hundreds of students who already trust GruBBmove.</p>
+        <div className="card" style={{padding:"28px 24px",maxWidth:420,margin:"0 auto",background:theme.card,border:`1px solid ${theme.border}`}}>
+          <h2 className="syne" style={{fontSize:22,fontWeight:700,marginBottom:10,color:theme.text}}>Ready to simplify campus life?</h2>
+          <p style={{color:theme.muted,marginBottom:20,fontSize:14}}>Join hundreds of students who already trust GruBBmove.</p>
           <button className="btn btn-p btn-lg btn-full" onClick={onSignUp}>Create Free Account</button>
         </div>
       </div>
@@ -1285,12 +1232,209 @@ function LandingPage({ onSignIn, onSignUp }) {
 }
 
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
+// ROLE SELECTOR SCREEN
+function RoleSelector({ user, onSelectRole, onBack, showToast }) {
+  return (
+    <AuthWrap title="Choose your role" subtitle="Are you a student looking for delivery, or a rider offering services?" onBack={onBack}>
+      <div style={{display:"flex",flexDirection:"column",gap:16}}>
+        <div onClick={()=>onSelectRole("student")} className="card hoverable" style={{padding:24,cursor:"pointer",border:`2px solid ${T.border}`,transition:"all .2s",textAlign:"center"}}>
+          <div style={{fontSize:48,marginBottom:12}}>👤</div>
+          <div className="syne" style={{fontSize:18,fontWeight:700,marginBottom:6}}>Student</div>
+          <div style={{fontSize:13,color:T.muted,marginBottom:10}}>Order services & track deliveries</div>
+          <div style={{fontSize:12,color:T.accent,fontWeight:600}}>Start ordering →</div>
+        </div>
+        <div onClick={()=>onSelectRole("rider")} className="card hoverable" style={{padding:24,cursor:"pointer",border:`2px solid ${T.border}`,transition:"all .2s",textAlign:"center"}}>
+          <div style={{fontSize:48,marginBottom:12}}>🚴</div>
+          <div className="syne" style={{fontSize:18,fontWeight:700,marginBottom:6}}>Rider</div>
+          <div style={{fontSize:13,color:T.muted,marginBottom:10}}>Offer delivery services & earn</div>
+          <div style={{fontSize:12,color:T.accent,fontWeight:600}}>Start earning →</div>
+        </div>
+      </div>
+    </AuthWrap>
+  );
+}
+
+// RIDER DASHBOARD
+function RiderDashboard({ user, orders, onSignOut, showToast, theme, onThemeChange }) {
+  const [activeNav, setActiveNav] = useState("home");
+  const [trackingOrder, setTrackingOrder] = useState(null);
+
+  const handleTrack = (order) => { setTrackingOrder(order); setActiveNav("tracking"); };
+
+  return (
+    <div style={{minHeight:"100vh",background:theme.bg,display:"flex",flexDirection:"column"}}>
+      {/* CONTENT */}
+      <div style={{flex:1,overflowY:"auto",paddingBottom:84}}>
+        {activeNav==="home" && (
+          <div style={{padding:"24px 20px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
+              <div>
+                <div className="syne" style={{fontSize:22,fontWeight:800}}>🚴 Rider</div>
+                <div style={{fontSize:13,color:theme.muted,marginTop:4}}>{user?.name}</div>
+              </div>
+              <button onClick={()=>onThemeChange(!theme.bg.includes("0A0A"))} style={{background:theme.card,border:`1px solid ${theme.border}`,borderRadius:12,width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:18}}>{theme.bg.includes("0A0A")?"☀️":"🌙"}</button>
+            </div>
+
+            <div className="card" style={{padding:20,marginBottom:20}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+                <div style={{background:theme.accent+"22",borderRadius:14,padding:14,textAlign:"center"}}>
+                  <div className="syne" style={{fontSize:24,fontWeight:800,color:theme.accent}}>0</div>
+                  <div style={{fontSize:12,color:theme.muted,marginTop:4}}>Active Deliveries</div>
+                </div>
+                <div style={{background:theme.green+"22",borderRadius:14,padding:14,textAlign:"center"}}>
+                  <div className="syne" style={{fontSize:24,fontWeight:800,color:theme.green}}>GHS 0</div>
+                  <div style={{fontSize:12,color:theme.muted,marginTop:4}}>Today's Earnings</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="syne" style={{fontSize:14,fontWeight:700,marginBottom:12}}>Available Deliveries</div>
+            {orders.length===0 ? (
+              <div style={{textAlign:"center",padding:"40px 20px",color:theme.muted}}>
+                <div style={{fontSize:40,marginBottom:12}}>📦</div>
+                <div style={{fontSize:14}}>No deliveries available</div>
+              </div>
+            ) : (
+              <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                {orders.slice(0,3).map(o=>(
+                  <div key={o.id} className="card" style={{padding:14,cursor:"pointer",border:`1px solid ${theme.border}`}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"start"}}>
+                      <div>
+                        <div style={{fontWeight:600,fontSize:14}}>{o.label}</div>
+                        <div style={{fontSize:12,color:theme.muted,marginTop:2}}>{o.hostel} • Room {o.room}</div>
+                      </div>
+                      <span style={{fontSize:12,background:theme.accent+"33",color:theme.accent,padding:"4px 10px",borderRadius:20}}>GHS {o.amount}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeNav==="track" && trackingOrder && (
+          <TrackingPage order={trackingOrder} onBack={()=>setActiveNav("home")} theme={theme} />
+        )}
+
+        {activeNav==="profile" && (
+          <div style={{padding:"24px 20px"}}>
+            <div className="syne" style={{fontSize:22,fontWeight:800,marginBottom:20}}>My Profile</div>
+            <div style={{textAlign:"center",marginBottom:28}}>
+              <div style={{width:80,height:80,borderRadius:"50%",background:`linear-gradient(135deg,${theme.accent},${theme.accentL})`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px"}}>
+                <span className="syne" style={{fontSize:32,fontWeight:800,color:"#fff"}}>{(user?.name||"R")[0]}</span>
+              </div>
+              <div className="syne" style={{fontSize:18,fontWeight:700}}>{user?.name}</div>
+              <div style={{fontSize:14,color:theme.muted,marginTop:4}}>{user?.email}</div>
+            </div>
+            <button className="btn btn-g btn-lg btn-full" style={{marginBottom:10,color:theme.text,borderColor:theme.border}} onClick={()=>showToast("Edit profile — coming soon!")}>✏️ Edit Profile</button>
+            <button onClick={onSignOut} style={{width:"100%",background:"#EF444420",color:"#EF4444",border:"1.5px solid #EF444430",borderRadius:14,padding:"13px",fontFamily:"'DM Sans',sans-serif",fontSize:15,fontWeight:600,cursor:"pointer"}}>🚪 Sign Out</button>
+          </div>
+        )}
+      </div>
+
+      {/* BOTTOM NAV */}
+      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:theme.surface,borderTop:`1px solid ${theme.border}`,padding:"6px 0",display:"flex",justifyContent:"space-around",zIndex:100}}>
+        {[{id:"home",emoji:"🏠",label:"Home"},{id:"track",emoji:"📍",label:"Track"},{id:"profile",emoji:"👤",label:"Profile"}].map(n=>(
+          <button key={n.id} className={`nav-btn${activeNav===n.id?" on":""}`} onClick={()=>setActiveNav(n.id)} style={{color:activeNav===n.id?theme.accent:theme.muted,background:activeNav===n.id?theme.accentDim:"transparent"}}>
+            <span style={{fontSize:22}}>{n.emoji}</span>{n.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// SHARED TRACKING PAGE (works for both student and rider)
+function TrackingPage({ order, onBack, theme = T }) {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setProgress(p => p >= 3 ? 3 : p + 1), 4000);
+    return () => clearInterval(id);
+  }, []);
+  const steps = [
+    { label:"Order Received",    sub:"We've got your order",         icon:"✅", done: progress>=0 },
+    { label:"Being Prepared",    sub:"Getting your order ready",     icon:"🔄", done: progress>=1 },
+    { label:"Rider on the way",  sub:"Our rider has been assigned",  icon:"🚴", done: progress>=2 },
+    { label:"Delivered",         sub:"Order delivered to your door", icon:"🎉", done: progress>=3 },
+  ];
+
+  return (
+    <div style={{padding:"24px 20px"}}>
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}>
+        <button onClick={onBack} style={{background:theme.card,border:`1px solid ${theme.border}`,borderRadius:12,width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:theme.text,fontSize:18}}>←</button>
+        <div>
+          <div className="syne" style={{fontSize:18,fontWeight:700}}>Track Order</div>
+          <div style={{fontSize:13,color:theme.muted}}>#{order?.id}</div>
+        </div>
+      </div>
+
+      {/* MAP PLACEHOLDER */}
+      <div style={{background:`linear-gradient(135deg,${theme.surface},${theme.card})`,border:`1px solid ${theme.border}`,borderRadius:20,height:200,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",marginBottom:20,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:20,left:20,background:theme.accent,borderRadius:8,padding:"4px 12px",fontSize:12,fontWeight:700,color:"#fff"}}>LIVE</div>
+        <div style={{fontSize:40,marginBottom:8}}>🗺️</div>
+        <div style={{fontSize:14,fontWeight:600}}>Live Map Tracking</div>
+        <div style={{fontSize:12,color:theme.muted,marginTop:4}}>Real-time tracking</div>
+      </div>
+
+      {/* PROGRESS STEPS */}
+      <div className="card" style={{padding:20,marginBottom:16,background:theme.card,border:`1px solid ${theme.border}`}}>
+        <div className="syne" style={{fontSize:14,fontWeight:700,marginBottom:18}}>Delivery Progress</div>
+        {steps.map((step,i)=>(
+          <div key={i}>
+            <div style={{display:"flex",gap:14}}>
+              <div>
+                <div style={{width:32,height:32,borderRadius:"50%",background:step.done?theme.accentDim:theme.surface,border:`2px solid ${step.done?theme.accent:theme.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,transition:"all .5s"}}>{step.done?step.icon:"○"}</div>
+              </div>
+              <div style={{paddingTop:4}}>
+                <div style={{fontWeight:600,fontSize:14,color:step.done?theme.text:theme.muted}}>{step.label}</div>
+                <div style={{fontSize:12,color:theme.muted,marginTop:2}}>{step.sub}</div>
+              </div>
+            </div>
+            {i<steps.length-1 && <div style={{width:2,height:24,background:steps[i+1].done?theme.accent:theme.border,marginLeft:15,marginBottom:4,marginTop:4,transition:"background .5s"}}/>}
+          </div>
+        ))}
+      </div>
+
+      {order?.scheduledDate && <CountdownDisplay targetDate={order.scheduledDate+"T"+(order.scheduledTime||"08:00")} label="Scheduled in" theme={theme} />}
+    </div>
+  );
+}
+
+// UPDATE COUNTDOWN DISPLAY TO ACCEPT THEME
+function CountdownDisplayThemed({ targetDate, label = "Scheduled in", theme = T }) {
+  const delta = useCountdown(targetDate);
+  if (!delta) return null;
+  const isDone = delta.d===0&&delta.h===0&&delta.m===0&&delta.s===0;
+  return (
+    <div style={{background:theme.accentDim,border:`1px solid ${theme.accent}44`,borderRadius:16,padding:16,marginTop:8}}>
+      <div style={{fontSize:12,fontWeight:600,color:theme.accent,marginBottom:12,display:"flex",alignItems:"center",gap:6}}>
+        ⏱ {isDone?"Ready for pickup!":label}
+      </div>
+      {isDone ? (
+        <div className="syne" style={{fontSize:18,fontWeight:800,color:theme.green,textAlign:"center"}}>🚀 Ready Now!</div>
+      ) : (
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+          {[["d","Days"],["h","Hours"],["m","Mins"],["s","Secs"]].map(([k,lbl])=>(
+            <div key={k} style={{background:theme.card,border:`1px solid ${theme.border}`,borderRadius:16,padding:18,textAlign:"center"}}>
+              <div className="syne" style={{fontSize:28,fontWeight:800,color:theme.accent,lineHeight:1}}>{pad(delta[k])}</div>
+              <div style={{fontSize:11,color:theme.muted,fontWeight:600,letterSpacing:".5px",textTransform:"uppercase",marginTop:4}}>{lbl}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [screen, setScreen] = useState("landing");
   const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
   const [orders, setOrders] = useState([]);
   const [toast, setToast] = useState(null);
   const [toastType, setToastType] = useState("success");
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const theme = getTheme(isDarkMode);
 
   const showToast = (msg, type="error") => {
     setToast(msg); setToastType(type);
@@ -1309,20 +1453,86 @@ export default function App() {
     return newOrder;
   };
 
+  const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: ${theme.bg}; color: ${theme.text}; font-family: 'DM Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: ${theme.border}; border-radius: 4px; }
+  .syne { font-family: 'Syne', sans-serif; }
+  @keyframes fadeUp   { from { opacity:0; transform:translateY(18px) } to { opacity:1; transform:translateY(0) } }
+  @keyframes fadeIn   { from { opacity:0 } to { opacity:1 } }
+  @keyframes pulse    { 0%,100% { opacity:1 } 50% { opacity:.4 } }
+  @keyframes spin     { to { transform:rotate(360deg) } }
+  @keyframes slideUp  { from { transform:translateY(100%); opacity:0 } to { transform:translateY(0); opacity:1 } }
+  @keyframes countdown-tick { 0% { transform:scale(1.12); color:#FF6B2B } 100% { transform:scale(1); color:inherit } }
+  .fu  { animation: fadeUp  .45s ease both; }
+  .fi  { animation: fadeIn  .35s ease both; }
+  .su  { animation: slideUp .4s  ease both; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:'DM Sans',sans-serif; font-weight:600; border:none; cursor:pointer; transition:all .2s; border-radius:14px; letter-spacing:.2px; }
+  .btn-p  { background:linear-gradient(135deg,${theme.accent},${theme.accentL}); color:#fff; }
+  .btn-p:hover  { transform:translateY(-2px); box-shadow:0 8px 28px ${theme.accent}55; }
+  .btn-p:active { transform:translateY(0); }
+  .btn-g  { background:transparent; color:${theme.text}; border:1.5px solid ${theme.border}; }
+  .btn-g:hover  { border-color:${theme.accent}; color:${theme.accent}; }
+  .btn-sm { padding:10px 20px; font-size:13px; border-radius:11px; }
+  .btn-md { padding:13px 26px; font-size:14px; }
+  .btn-lg { padding:15px 32px; font-size:15px; }
+  .btn-full { width:100%; }
+  .inp { width:100%; background:${theme.card}; border:1.5px solid ${theme.border}; border-radius:12px; padding:13px 15px; color:${theme.text}; font-family:'DM Sans',sans-serif; font-size:14px; outline:none; transition:border .2s; }
+  .inp:focus { border-color:${theme.accent}; }
+  .inp::placeholder { color:${theme.dim}; }
+  select.inp { cursor:pointer; appearance:none; }
+  .card { background:${theme.card}; border:1px solid ${theme.border}; border-radius:20px; }
+  .card-sm { border-radius:14px; }
+  .hoverable:hover { border-color:${theme.accent}44; transform:translateY(-2px); box-shadow:0 4px 20px #00000033; }
+  .pay-opt { border:1.5px solid ${theme.border}; border-radius:14px; padding:15px; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:14px; }
+  .pay-opt.sel { border-color:${theme.accent}; background:${theme.accentDim}; }
+  .pay-opt:hover:not(.sel) { border-color:${theme.accent}66; }
+  .toggle-opt { border:2px solid ${theme.border}; border-radius:14px; padding:13px; cursor:pointer; transition:all .2s; }
+  .toggle-opt:hover:not(.tog-active) { border-color:${theme.muted}; }
+  .nav-btn { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:7px 18px; border-radius:12px; transition:all .2s; color:${theme.muted}; font-size:11px; font-weight:500; background:none; border:none; font-family:'DM Sans',sans-serif; }
+  .nav-btn.on { color:${theme.accent}; background:${theme.accentDim}; }
+  .nav-btn:hover:not(.on) { color:${theme.text}; }
+  .toast { position:fixed; bottom:96px; left:50%; transform:translateX(-50%); padding:11px 22px; border-radius:12px; font-weight:600; font-size:13px; z-index:9999; white-space:nowrap; animation:fadeUp .3s ease; pointer-events:none; }
+  .badge { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:.3px; }
+  .sec-div { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:${theme.muted}; letter-spacing:1px; text-transform:uppercase; border-top:1px solid ${theme.border}; padding-top:14px; margin-top:4px; }
+  .countdown-box { background:${theme.card}; border:1px solid ${theme.border}; border-radius:16px; padding:18px; text-align:center; }
+  .countdown-num { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; color:${theme.accent}; line-height:1; }
+  .countdown-lbl { font-size:11px; color:${theme.muted}; font-weight:600; letter-spacing:.5px; text-transform:uppercase; margin-top:4px; }
+  .tick { animation: countdown-tick .5s ease; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .cal-day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:10px; font-size:13px; cursor:pointer; transition:all .15s; }
+  .cal-day:hover:not(.cal-empty):not(.cal-past) { background:${theme.accentDim}; color:${theme.accent}; }
+  .cal-day.cal-sel { background:${theme.accent}; color:#fff; font-weight:700; }
+  .cal-day.cal-today { border:2px solid ${theme.accent}; color:${theme.accent}; font-weight:700; }
+  .cal-day.cal-past { opacity:.3; cursor:not-allowed; }
+  .cal-day.cal-empty { cursor:default; }
+  .timeline-step { display:flex; gap:14px; }
+  .tl-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+  .tl-line { width:2px; background:${theme.border}; flex:1; min-height:30px; margin:4px 0 4px 5px; }
+  .order-card { background:${theme.card}; border:1px solid ${theme.border}; border-radius:18px; padding:18px; transition:all .2s; }
+  .order-card:hover { border-color:${theme.accent}33; }
+  .scroll-x { display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+  .scroll-x::-webkit-scrollbar { display:none; }
+  .chip { display:inline-flex; align-items:center; padding:7px 14px; border-radius:20px; border:1.5px solid; font-size:13px; font-weight:500; cursor:pointer; transition:all .2s; white-space:nowrap; flex-shrink:0; }
+  `;
+
   return (
-    <div style={{background:T.bg,minHeight:"100vh"}}>
-      <style>{CSS}</style>
+    <div style={{background:theme.bg,minHeight:"100vh"}}>
+      <style>{css}</style>
       {toast && (
-        <div className="toast" style={{background:toastType==="success"?T.green:"#EF4444"}}>
+        <div className="toast" style={{background:toastType==="success"?theme.green:"#EF4444"}}>
           {toast}
         </div>
       )}
-      <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",position:"relative",background:T.bg}}>
-        {screen==="landing"       && <LandingPage onSignIn={()=>setScreen("signin")} onSignUp={()=>setScreen("signup")}/>}
-        {screen==="signin"        && <SignInScreen onSignIn={u=>{setUser(u);setScreen("dashboard");}} onGoSignUp={()=>setScreen("signup")} onBack={()=>setScreen("landing")} showToast={showToast}/>}
-        {screen==="signup"        && <SignUpScreen onSignUp={u=>{setUser(u);setScreen("profile-setup");}} onGoSignIn={()=>setScreen("signin")} onBack={()=>setScreen("landing")} showToast={showToast}/>}
-        {screen==="profile-setup" && <ProfileSetupScreen user={user} onComplete={u=>{setUser(u);showToast("Welcome to GruBBmove! 🚀","success");setScreen("dashboard");}} showToast={showToast}/>}
-        {screen==="dashboard"     && <Dashboard user={user} orders={orders} onPlaceOrder={handlePlaceOrder} onSignOut={()=>{setUser(null);setScreen("landing");}} showToast={showToast}/>}
+      <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",position:"relative",background:theme.bg}}>
+        {screen==="landing"       && <LandingPage onSignIn={()=>setScreen("signin")} onSignUp={()=>setScreen("signup")} theme={theme} onThemeChange={setIsDarkMode}/>}
+        {screen==="signin"        && <SignInScreen onSignIn={u=>{setUser(u);setScreen("role-select");}} onGoSignUp={()=>setScreen("signup")} onBack={()=>setScreen("landing")} showToast={showToast} theme={theme}/>}
+        {screen==="signup"        && <SignUpScreen onSignUp={u=>{setUser(u);setScreen("profile-setup");}} onGoSignIn={()=>setScreen("signin")} onBack={()=>setScreen("landing")} showToast={showToast} theme={theme}/>}
+        {screen==="role-select"   && <RoleSelector user={user} onSelectRole={r=>{setRole(r);setScreen("profile-setup");}} onBack={()=>setScreen("signin")} showToast={showToast}/>}
+        {screen==="profile-setup" && <ProfileSetupScreen user={user} onComplete={u=>{setUser(u);showToast("Welcome to GruBBmove! 🚀","success");setScreen(role==="student"?"dashboard":"rider-dashboard");}} showToast={showToast} theme={theme}/>}
+        {screen==="dashboard"     && <Dashboard user={user} orders={orders} onPlaceOrder={handlePlaceOrder} onSignOut={()=>{setUser(null);setRole(null);setScreen("landing");}} showToast={showToast} theme={theme} onThemeChange={setIsDarkMode}/>}
+        {screen==="rider-dashboard" && role==="rider" && <RiderDashboard user={user} orders={orders} onSignOut={()=>{setUser(null);setRole(null);setScreen("landing");}} showToast={showToast} theme={theme} onThemeChange={setIsDarkMode}/>}
       </div>
     </div>
   );
