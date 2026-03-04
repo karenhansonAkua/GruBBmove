@@ -977,7 +977,7 @@ function HomeTab({ user, onNavigate }) {
 }
 
 // ─── DASHBOARD SHELL ──────────────────────────────────────────────────────────
-function Dashboard({ user, orders, onPlaceOrder, onSignOut, showToast, theme = T, onThemeChange }) {
+function Dashboard({ user, orders, onPlaceOrder, onSignOut, showToast, theme = T }) {
   const [activeNav, setActiveNav] = useState("home");
   const [serviceId, setServiceId] = useState(null);
   const [successOrder, setSuccessOrder] = useState(null);
@@ -999,23 +999,23 @@ function Dashboard({ user, orders, onPlaceOrder, onSignOut, showToast, theme = T
   const handleTrack = (order) => { setTrackingOrder(order); setActiveNav("tracking"); };
 
   return (
-    <div style={{minHeight:"100vh",background:T.bg,display:"flex",flexDirection:"column"}}>
+    <div style={{minHeight:"100vh",background:theme.bg,display:"flex",flexDirection:"column"}}>
       {/* CONTENT */}
       <div style={{flex:1,overflowY:"auto",paddingBottom:84}}>
-        {activeNav==="home"    && <HomeTab user={user} onNavigate={navigate}/>}
-        {activeNav==="orders"  && <OrdersTab orders={orders} onTrack={handleTrack}/>}
-        {activeNav==="profile" && <ProfileTab user={user} onSignOut={onSignOut} showToast={showToast}/>}
-        {activeNav==="tracking" && trackingOrder && <TrackingPage order={trackingOrder} onBack={()=>navigate("orders")}/>}
+        {activeNav==="home"    && <HomeTab user={user} onNavigate={navigate} theme={theme}/>}
+        {activeNav==="orders"  && <OrdersTab orders={orders} onTrack={handleTrack} theme={theme}/>}
+        {activeNav==="profile" && <ProfileTab user={user} onSignOut={onSignOut} showToast={showToast} theme={theme}/>}
+        {activeNav==="tracking" && trackingOrder && <TrackingPage order={trackingOrder} onBack={()=>navigate("orders")} theme={theme}/>}
 
         {activeNav==="success" && successOrder && (
           <OrderSuccess order={successOrder} onBack={()=>navigate("home")} />
         )}
 
         {activeNav==="service" && svc && (
-          <div style={{minHeight:"100vh",background:T.bg}}>
+          <div style={{minHeight:"100vh",background:theme.bg}}>
             {/* SERVICE HEADER */}
-            <div style={{padding:"20px 20px 0",display:"flex",alignItems:"center",gap:14,marginBottom:20,position:"sticky",top:0,background:T.bg,zIndex:10,borderBottom:`1px solid ${T.border}`,paddingBottom:16}}>
-              <button onClick={()=>navigate("home")} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:12,width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:T.text,fontSize:18,flexShrink:0}}>←</button>
+            <div style={{padding:"20px 20px 0",display:"flex",alignItems:"center",gap:14,marginBottom:20,position:"sticky",top:0,background:theme.bg,zIndex:10,borderBottom:`1px solid ${theme.border}`,paddingBottom:16}}>
+              <button onClick={()=>navigate("home")} style={{background:theme.card,border:`1px solid ${theme.border}`,borderRadius:12,width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:theme.text,fontSize:18,flexShrink:0}}>←</button>
               <div style={{width:44,height:44,borderRadius:14,background:svc.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{svc.emoji}</div>
               <div style={{flex:1,minWidth:0}}>
                 <div className="syne" style={{fontSize:18,fontWeight:700}}>{svc.label}</div>
@@ -1036,9 +1036,9 @@ function Dashboard({ user, orders, onPlaceOrder, onSignOut, showToast, theme = T
 
       {/* BOTTOM NAV — hide on service/success/tracking screens */}
       {!["service","success","tracking"].includes(activeNav) && (
-        <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:T.surface,borderTop:`1px solid ${T.border}`,padding:"6px 0",display:"flex",justifyContent:"space-around",zIndex:100}}>
+        <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:theme.surface,borderTop:`1px solid ${theme.border}`,padding:"6px 0",display:"flex",justifyContent:"space-around",zIndex:100}}>
           {[{id:"home",emoji:"🏠",label:"Home"},{id:"orders",emoji:"📋",label:"Orders"},{id:"profile",emoji:"👤",label:"Profile"}].map(n=>(
-            <button key={n.id} className={`nav-btn${activeNav===n.id?" on":""}`} onClick={()=>navigate(n.id)}>
+            <button key={n.id} className={`nav-btn${activeNav===n.id?" on":""}`} onClick={()=>navigate(n.id)} style={{color:activeNav===n.id?theme.accent:theme.muted,background:activeNav===n.id?theme.accentDim:"transparent"}}>
               <span style={{fontSize:22}}>{n.emoji}</span>{n.label}
             </button>
           ))}
@@ -1233,7 +1233,7 @@ function LandingPage({ onSignIn, onSignUp, theme = T, onThemeChange }) {
 
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
 // ROLE SELECTOR SCREEN
-function RoleSelector({ user, onSelectRole, onBack, showToast }) {
+function RoleSelector({ onSelectRole, onBack }) {
   return (
     <AuthWrap title="Choose your role" subtitle="Are you a student looking for delivery, or a rider offering services?" onBack={onBack}>
       <div style={{display:"flex",flexDirection:"column",gap:16}}>
@@ -1297,7 +1297,7 @@ function RiderDashboard({ user, orders, onSignOut, showToast, theme, onThemeChan
             ) : (
               <div style={{display:"flex",flexDirection:"column",gap:12}}>
                 {orders.slice(0,3).map(o=>(
-                  <div key={o.id} className="card" style={{padding:14,cursor:"pointer",border:`1px solid ${theme.border}`}}>
+                  <div key={o.id} className="card" style={{padding:14,cursor:"pointer",border:`1px solid ${theme.border}`}} onClick={()=>handleTrack(o)}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"start"}}>
                       <div>
                         <div style={{fontWeight:600,fontSize:14}}>{o.label}</div>
@@ -1529,9 +1529,9 @@ export default function App() {
         {screen==="landing"       && <LandingPage onSignIn={()=>setScreen("signin")} onSignUp={()=>setScreen("signup")} theme={theme} onThemeChange={setIsDarkMode}/>}
         {screen==="signin"        && <SignInScreen onSignIn={u=>{setUser(u);setScreen("role-select");}} onGoSignUp={()=>setScreen("signup")} onBack={()=>setScreen("landing")} showToast={showToast} theme={theme}/>}
         {screen==="signup"        && <SignUpScreen onSignUp={u=>{setUser(u);setScreen("profile-setup");}} onGoSignIn={()=>setScreen("signin")} onBack={()=>setScreen("landing")} showToast={showToast} theme={theme}/>}
-        {screen==="role-select"   && <RoleSelector user={user} onSelectRole={r=>{setRole(r);setScreen("profile-setup");}} onBack={()=>setScreen("signin")} showToast={showToast}/>}
+        {screen==="role-select"   && <RoleSelector onSelectRole={r=>{setRole(r);setScreen("profile-setup");}} onBack={()=>setScreen("signin")}/>}
         {screen==="profile-setup" && <ProfileSetupScreen user={user} onComplete={u=>{setUser(u);showToast("Welcome to GruBBmove! 🚀","success");setScreen(role==="student"?"dashboard":"rider-dashboard");}} showToast={showToast} theme={theme}/>}
-        {screen==="dashboard"     && <Dashboard user={user} orders={orders} onPlaceOrder={handlePlaceOrder} onSignOut={()=>{setUser(null);setRole(null);setScreen("landing");}} showToast={showToast} theme={theme} onThemeChange={setIsDarkMode}/>}
+        {screen==="dashboard"     && <Dashboard user={user} orders={orders} onPlaceOrder={handlePlaceOrder} onSignOut={()=>{setUser(null);setRole(null);setScreen("landing");}} showToast={showToast} theme={theme}/>}
         {screen==="rider-dashboard" && role==="rider" && <RiderDashboard user={user} orders={orders} onSignOut={()=>{setUser(null);setRole(null);setScreen("landing");}} showToast={showToast} theme={theme} onThemeChange={setIsDarkMode}/>}
       </div>
     </div>
